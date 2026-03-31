@@ -545,9 +545,10 @@ const formatRelativeDate = (value) => {
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startOfTarget = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
   const diffDays = Math.round((startOfTarget.getTime() - startOfToday.getTime()) / (24 * 60 * 60 * 1000));
+  const timeText = parsed.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
-  if (diffDays <= 0) return "Today";
-  if (diffDays === 1) return "Tomorrow";
+  if (diffDays <= 0) return `Today @ ${timeText}`;
+  if (diffDays === 1) return `Tomorrow @ ${timeText}`;
   if (diffDays < 7) return `In ${diffDays} days`;
 
   const weeks = Math.round(diffDays / 7);
