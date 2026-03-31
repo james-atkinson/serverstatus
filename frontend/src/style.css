@@ -160,10 +160,6 @@ body {
   margin-bottom: 10px;
 }
 
-.system-grid-metrics {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
 .system-grid-item {
   border: 1px solid var(--border);
   padding: 8px;
@@ -181,6 +177,14 @@ body {
   color: var(--muted);
   font-size: 11px;
   text-transform: uppercase;
+}
+
+.system-inline-metrics {
+  border: 1px solid var(--border);
+  padding: 8px;
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--text);
 }
 
 .progress-track {
@@ -434,8 +438,7 @@ body {
 }
 
 @media (max-width: 600px) {
-  .system-grid,
-  .system-grid-metrics {
+  .system-grid {
     grid-template-columns: 1fr;
   }
 
