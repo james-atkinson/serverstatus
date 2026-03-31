@@ -14,6 +14,7 @@
         <div v-if="system">
           <p>Host: {{ system.hostname }}</p>
           <p>CPU: {{ system.cpuUsagePct }}%</p>
+          <p>Load Avg: {{ formatLoadAvg(system.loadAvg) }}</p>
           <div class="metric-block">
             <div class="metric-row">
               <span>Memory</span>
@@ -503,6 +504,10 @@ const toGiB = (bytes) => (bytes / 1024 / 1024 / 1024).toFixed(1);
 const formatUptime = (seconds) => `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
 const formatMbps = (value) => (typeof value === "number" ? value.toFixed(2) : "n/a");
 const formatMs = (value) => (typeof value === "number" ? value.toFixed(2) : "n/a");
+const formatLoadAvg = (values) => {
+  if (!Array.isArray(values) || !values.length) return "n/a";
+  return values.map((value) => Number(value).toFixed(2)).join(" / ");
+};
 const pad2 = (value) => String(value ?? 0).padStart(2, "0");
 const resolveSonarrArt = (episode) => {
   if (episode?.artUrl) return episode.artUrl;
