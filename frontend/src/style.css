@@ -210,6 +210,10 @@ body {
   background: var(--comp);
 }
 
+.progress-fill-path {
+  background: var(--accent);
+}
+
 .filesystem-list {
   margin-top: 8px;
   display: grid;
@@ -219,6 +223,17 @@ body {
 .filesystem-item {
   border: 1px solid var(--border);
   padding: 6px;
+}
+
+.filesystem-paths {
+  margin-top: 6px;
+  display: grid;
+  gap: 6px;
+}
+
+.filesystem-path-item {
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
 }
 
 .speed-widget {

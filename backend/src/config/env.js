@@ -31,19 +31,52 @@ const ensureHttpUrl = (value, key) => {
   }
 };
 
+const parseCsv = (value) =>
+  (value || "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+const parseMonitoredFilesystemPaths = () => {
+  const raw =
+    process.env.MONITORED_FILESYSTEM_PATHS ||
+    process.env.MONITORED_FILESYSTEMS_MAP ||
+    APP_DEFAULTS.MONITORED_FILESYSTEM_PATHS;
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error("must be a JSON object");
+    }
+    const normalized = Object.fromEntries(
+      Object.entries(parsed)
+        .map(([fsName, paths]) => [
+          String(fsName).trim(),
+          Array.isArray(paths) ? paths.map((entry) => String(entry).trim()).filter(Boolean) : []
+        ])
+        .filter(([fsName]) => Boolean(fsName))
+    );
+    return normalized;
+  } catch {
+    const fallbackFilesystems = parseCsv(process.env.MONITORED_FILESYSTEMS || APP_DEFAULTS.MONITORED_FILESYSTEMS);
+    const fallbackPaths = parseCsv(process.env.MONITORED_PATHS || APP_DEFAULTS.MONITORED_PATHS);
+    if (!fallbackFilesystems.length) return {};
+    return Object.fromEntries(
+      fallbackFilesystems.map((fsName, index) => [fsName, index === 0 ? fallbackPaths : []])
+    );
+  }
+};
+
+const monitoredFilesystemPaths = parseMonitoredFilesystemPaths();
+
 export const config = {
   port: asInt(process.env.PORT, APP_DEFAULTS.PORT),
   sqlitePath: process.env.SQLITE_PATH || APP_DEFAULTS.SQLITE_PATH,
   checkIntervalSec: asInt(process.env.CHECK_INTERVAL_SEC, APP_DEFAULTS.CHECK_INTERVAL_SEC),
   speedtestIntervalMin: asInt(process.env.SPEEDTEST_INTERVAL_MIN, APP_DEFAULTS.SPEEDTEST_INTERVAL_MIN),
-  monitoredFilesystems: (process.env.MONITORED_FILESYSTEMS || APP_DEFAULTS.MONITORED_FILESYSTEMS)
-    .split(",")
-    .map((entry) => entry.trim())
-    .filter(Boolean),
-  monitoredPaths: (process.env.MONITORED_PATHS || APP_DEFAULTS.MONITORED_PATHS)
-    .split(",")
-    .map((entry) => entry.trim())
-    .filter(Boolean),
+  monitoredFilesystemPaths,
+  monitoredFilesystems: Object.keys(monitoredFilesystemPaths),
+  monitoredPaths: Object.values(monitoredFilesystemPaths).flat(),
   pingTargets: (process.env.PING_TARGETS || APP_DEFAULTS.PING_TARGETS)
     .split(",")
     .map((entry) => entry.trim())

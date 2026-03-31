@@ -57,17 +57,40 @@
           <div class="metric-block">
             <div class="metric-row">
               <span>Disk Monitors</span>
-              <span>{{ (system.filesystems || []).length }} items</span>
+              <span>{{ (system.filesystems || []).length }} filesystems</span>
             </div>
             <div class="filesystem-list">
               <div v-for="filesystem in system.filesystems || []" :key="filesystem.id || `${filesystem.fs}-${filesystem.path}`" class="filesystem-item">
                 <div class="metric-row">
-                  <span>{{ filesystem.label || filesystem.path || filesystem.fs }}</span>
+                  <span>{{ filesystem.fs }}</span>
                   <span>{{ filesystem.usePct }}% ({{ toGiB(filesystem.used) }} / {{ toGiB(filesystem.total) }} GiB)</span>
                 </div>
                 <div class="recent-episode-time">{{ filesystem.fs }}{{ filesystem.mount ? ` @ ${filesystem.mount}` : "" }}</div>
                 <div class="progress-track">
                   <div class="progress-fill progress-fill-disk" :style="{ width: `${Math.min(100, filesystem.usePct)}%` }"></div>
+                </div>
+                <div v-if="(filesystem.paths || []).length" class="filesystem-paths">
+                  <div
+                    v-for="pathEntry in filesystem.paths"
+                    :key="pathEntry.id || pathEntry.path"
+                    class="filesystem-path-item"
+                  >
+                    <div class="metric-row">
+                      <span>{{ pathEntry.path }}</span>
+                      <span>
+                        {{ pathEntry.directoryBytes === null ? "n/a" : `${toGiB(pathEntry.directoryBytes)} GiB` }}
+                        <template v-if="pathEntry.directoryBytes !== null">
+                          ({{ pathEntry.usePctOfFilesystem }}%)
+                        </template>
+                      </span>
+                    </div>
+                    <div class="progress-track">
+                      <div
+                        class="progress-fill progress-fill-path"
+                        :style="{ width: `${Math.min(100, pathEntry.usePctOfFilesystem || 0)}%` }"
+                      ></div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
