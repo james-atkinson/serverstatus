@@ -1,7 +1,6 @@
 import axios from "axios";
 import { XMLParser } from "fast-xml-parser";
 import { getPlexConnection } from "./plexAuth.js";
-import { services } from "../config/env.js";
 
 const xmlParser = new XMLParser({
   ignoreAttributes: false,
@@ -9,22 +8,20 @@ const xmlParser = new XMLParser({
 });
 
 const plexClient = axios.create({ timeout: 10000 });
-const byId = Object.fromEntries(services.map((service) => [service.id, service]));
 
 const asArray = (value) => {
   if (!value) return [];
   return Array.isArray(value) ? value : [value];
 };
 
-const normalize = (value) => String(value || "").trim().toLowerCase();
+const buildPlexWebUrl = (entry) => {
+  const connection = getPlexConnection();
+  const base = connection?.url;
+  if (!base) return null;
 
-const safeGet = async (url, options = {}) => {
-  try {
-    const response = await plexClient.get(url, options);
-    return response.data;
-  } catch {
-    return null;
-  }
+  const key = entry?.key || (entry?.ratingKey ? `/library/metadata/${entry.ratingKey}` : null);
+  if (!key) return null;
+  return `${base}/web/index.html#!/details?key=${encodeURIComponent(key)}`;
 };
 
 const pickArt = (entry) => {
@@ -40,26 +37,6 @@ const pickArt = (entry) => {
     return { artPath: null, artUrl: selected };
   }
   return { artPath: selected, artUrl: null };
-};
-
-const buildAppUrl = (entry, sonarr, radarr, sonarrByTitle, radarrList) => {
-  const type = normalize(entry?.type);
-  const title = entry?.title || "";
-  const seriesTitle = entry?.grandparentTitle || "";
-
-  if (type === "episode" && sonarr?.url && seriesTitle) {
-    const series = sonarrByTitle.get(normalize(seriesTitle));
-    if (series?.titleSlug) return `${sonarr.url}/series/${series.titleSlug}`;
-    if (series?.id) return `${sonarr.url}/series/${series.id}`;
-  }
-
-  if (type === "movie" && radarr?.url) {
-    const movie = radarrList.find((row) => normalize(row?.title) === normalize(title));
-    if (movie?.titleSlug) return `${radarr.url}/movie/${movie.titleSlug}`;
-    if (movie?.id) return `${radarr.url}/movie/${movie.id}`;
-  }
-
-  return null;
 };
 
 const fetchPlexXml = async (endpoint, params = {}) => {
@@ -114,21 +91,6 @@ export const getPlexNowPlaying = async () => {
       ...asArray(altContainer.Photo)
     );
   }
-  const sonarr = byId.sonarr;
-  const radarr = byId.radarr;
-  const [sonarrSeries, radarrMovies] = await Promise.all([
-    sonarr?.enabled
-      ? safeGet(`${sonarr.url}/api/v3/series`, { headers: { "X-Api-Key": sonarr.token } })
-      : null,
-    radarr?.enabled
-      ? safeGet(`${radarr.url}/api/v3/movie`, { headers: { "X-Api-Key": radarr.token } })
-      : null
-  ]);
-  const sonarrByTitle = new Map(
-    (Array.isArray(sonarrSeries) ? sonarrSeries : []).map((series) => [normalize(series?.title), series])
-  );
-  const radarrList = Array.isArray(radarrMovies) ? radarrMovies : [];
-
   return sessions.map((entry) => {
     const user = asArray(entry.User)[0] || {};
     const player = asArray(entry.Player)[0] || {};
@@ -150,7 +112,7 @@ export const getPlexNowPlaying = async () => {
       startedAt: entry.lastViewedAt || null,
       artPath: art.artPath,
       artUrl: art.artUrl,
-      appUrl: buildAppUrl(entry, sonarr, radarr, sonarrByTitle, radarrList)
+      appUrl: buildPlexWebUrl(entry)
     };
   });
 };
@@ -162,21 +124,6 @@ export const getPlexHistory = async (limit = 20) => {
     "X-Plex-Container-Size": Math.max(1, Math.min(100, Number(limit) || 20))
   });
   const videos = [...asArray(container.Metadata), ...asArray(container.Video)];
-  const sonarr = byId.sonarr;
-  const radarr = byId.radarr;
-  const [sonarrSeries, radarrMovies] = await Promise.all([
-    sonarr?.enabled
-      ? safeGet(`${sonarr.url}/api/v3/series`, { headers: { "X-Api-Key": sonarr.token } })
-      : null,
-    radarr?.enabled
-      ? safeGet(`${radarr.url}/api/v3/movie`, { headers: { "X-Api-Key": radarr.token } })
-      : null
-  ]);
-
-  const sonarrByTitle = new Map(
-    (Array.isArray(sonarrSeries) ? sonarrSeries : []).map((series) => [normalize(series?.title), series])
-  );
-  const radarrList = Array.isArray(radarrMovies) ? radarrMovies : [];
 
   return videos.map((entry) => {
     const title = entry.title || "Unknown Title";
@@ -194,7 +141,7 @@ export const getPlexHistory = async (limit = 20) => {
       viewOffsetMs: entry.viewOffset ? Number(entry.viewOffset) : null,
       artPath: art.artPath,
       artUrl: art.artUrl,
-      appUrl: buildAppUrl(entry, sonarr, radarr, sonarrByTitle, radarrList)
+      appUrl: buildPlexWebUrl(entry)
     };
   });
 };
