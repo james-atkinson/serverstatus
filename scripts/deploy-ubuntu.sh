@@ -65,9 +65,8 @@ Type=simple
 WorkingDirectory=${REPO_ROOT}
 EnvironmentFile=${ENV_FILE}
 Environment=NODE_ENV=production
-Environment=PNPM_VERSION=10.7.0
-Environment=PATH=/usr/local/bin:/usr/bin:/bin
-ExecStart=${REPO_ROOT}/scripts/pnpmw start
+Environment=PATH=/usr/local/bin:/usr/bin:/bin:/snap/bin
+ExecStart=/usr/bin/env node ${REPO_ROOT}/backend/src/server.js
 Restart=always
 RestartSec=5
 User=${RUN_USER}
