@@ -170,6 +170,29 @@
               No recent Sonarr episode imports found.
             </p>
           </div>
+          <div class="recent-episodes">
+            <p class="recent-episodes-title">Coming Soon TV (Next 30 Days)</p>
+            <ul class="recent-episode-list">
+              <li v-for="episode in media.sonarrComingSoon || []" :key="`soon-tv-${episode.id}`">
+                <a class="recent-item-link" :href="sonarrItemUrl(episode)" target="_blank" rel="noreferrer noopener">
+                  <img
+                    class="recent-episode-art"
+                    :src="resolveSonarrArt(episode)"
+                    :alt="`${episode.seriesTitle} artwork`"
+                    loading="lazy"
+                  />
+                  <div class="recent-episode-meta">
+                    <strong>{{ episode.seriesTitle }}</strong>
+                    <span>S{{ pad2(episode.seasonNumber) }}E{{ pad2(episode.episodeNumber) }} - {{ episode.episodeTitle }}</span>
+                    <span class="recent-episode-time">{{ formatTimestamp(episode.date) }}</span>
+                  </div>
+                </a>
+              </li>
+            </ul>
+            <p v-if="!(media.sonarrComingSoon || []).length" class="speed-history-empty">
+              No upcoming Sonarr releases in the next 30 days.
+            </p>
+          </div>
           <p>Movies: {{ media.radarrMovieCount ?? "n/a" }}</p>
           <div class="recent-episodes">
             <p class="recent-episodes-title">Recently Added Movies (Last 5)</p>
@@ -192,6 +215,29 @@
             </ul>
             <p v-if="!(media.radarrRecentMovies || []).length" class="speed-history-empty">
               No recent Radarr movie imports found.
+            </p>
+          </div>
+          <div class="recent-episodes">
+            <p class="recent-episodes-title">Coming Soon Movies (Next 30 Days)</p>
+            <ul class="recent-episode-list">
+              <li v-for="movie in media.radarrComingSoon || []" :key="`soon-movie-${movie.id}`">
+                <a class="recent-item-link" :href="radarrItemUrl(movie)" target="_blank" rel="noreferrer noopener">
+                  <img
+                    class="recent-episode-art"
+                    :src="resolveRadarrArt(movie)"
+                    :alt="`${movie.title} artwork`"
+                    loading="lazy"
+                  />
+                  <div class="recent-episode-meta">
+                    <strong>{{ movie.title }}</strong>
+                    <span>{{ movie.year || "Unknown Year" }}</span>
+                    <span class="recent-episode-time">{{ formatTimestamp(movie.releaseDate) }}</span>
+                  </div>
+                </a>
+              </li>
+            </ul>
+            <p v-if="!(media.radarrComingSoon || []).length" class="speed-history-empty">
+              No upcoming Radarr releases in the next 30 days.
             </p>
           </div>
         </div>

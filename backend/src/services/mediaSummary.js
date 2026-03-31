@@ -43,7 +43,12 @@ export const getMediaSummary = async () => {
   const sonarr = byId.sonarr;
   const radarr = byId.radarr;
 
-  const [jellyInfo, plexRoot, sonarrSeries, radarrMovies, sonarrHistory] = await Promise.all([
+  const now = new Date();
+  const inThirtyDays = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const start = now.toISOString().slice(0, 10);
+  const end = inThirtyDays.toISOString().slice(0, 10);
+
+  const [jellyInfo, plexRoot, sonarrSeries, radarrMovies, sonarrHistory, sonarrCalendar, radarrCalendar] = await Promise.all([
     jellyfin?.enabled
       ? safeGet(`${jellyfin.url}/Items/Counts`, { headers: { "X-Emby-Token": jellyfin.token } })
       : null,
@@ -62,6 +67,18 @@ export const getMediaSummary = async () => {
       ? safeGet(
           `${sonarr.url}/api/v3/history?page=1&pageSize=200&sortKey=date&sortDirection=descending&includeSeries=true&includeEpisode=true`,
           { headers: { "X-Api-Key": sonarr.token } }
+        )
+      : null,
+    sonarr?.enabled
+      ? safeGet(
+          `${sonarr.url}/api/v3/calendar?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&includeSeries=true`,
+          { headers: { "X-Api-Key": sonarr.token } }
+        )
+      : null,
+    radarr?.enabled
+      ? safeGet(
+          `${radarr.url}/api/v3/calendar?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`,
+          { headers: { "X-Api-Key": radarr.token } }
         )
       : null
   ]);
@@ -123,6 +140,48 @@ export const getMediaSummary = async () => {
       };
     });
 
+  const sonarrComingSoon = (Array.isArray(sonarrCalendar) ? sonarrCalendar : [])
+    .filter((row) => row?.series && row?.airDateUtc)
+    .slice()
+    .sort((a, b) => new Date(a.airDateUtc).getTime() - new Date(b.airDateUtc).getTime())
+    .filter((row) => new Date(row.airDateUtc).getTime() >= now.getTime())
+    .map((row) => {
+      const art = pickSonarrArt(row);
+      return {
+        id: row.id,
+        seriesId: row.series?.id ?? null,
+        seriesSlug: row.series?.titleSlug || null,
+        seriesTitle: row.series?.title || "Unknown Series",
+        seasonNumber: row.seasonNumber,
+        episodeNumber: row.episodeNumber,
+        episodeTitle: row.title || "Unknown Episode",
+        date: row.airDateUtc,
+        artPath: art.artPath,
+        artUrl: art.artUrl
+      };
+    })
+    .slice(0, 5);
+
+  const radarrComingSoon = (Array.isArray(radarrCalendar) ? radarrCalendar : [])
+    .filter((row) => row?.title && row?.inCinemas)
+    .slice()
+    .sort((a, b) => new Date(a.inCinemas).getTime() - new Date(b.inCinemas).getTime())
+    .filter((row) => new Date(row.inCinemas).getTime() >= now.getTime())
+    .map((row) => {
+      const art = pickRadarrArt(row);
+      return {
+        id: row.id,
+        movieId: row.id,
+        movieSlug: row.titleSlug || null,
+        title: row.title || "Unknown Movie",
+        year: row.year ?? null,
+        releaseDate: row.physicalRelease || row.digitalRelease || row.inCinemas,
+        artPath: art.artPath,
+        artUrl: art.artUrl
+      };
+    })
+    .slice(0, 5);
+
   const sonarrEpisodeCount = Array.isArray(sonarrSeries)
     ? sonarrSeries.reduce((total, series) => {
         const stats = series?.statistics || {};
@@ -140,9 +199,11 @@ export const getMediaSummary = async () => {
     sonarrEpisodeCount,
     sonarrBaseUrl: sonarr?.url || null,
     sonarrRecentEpisodes,
+    sonarrComingSoon,
     radarrMovieCount: Array.isArray(radarrMovies) ? radarrMovies.length : null,
     radarrBaseUrl: radarr?.url || null,
     radarrRecentMovies,
+    radarrComingSoon,
     jellyfinMovieCount: jellyInfo?.MovieCount ?? null,
     jellyfinSeriesCount: jellyInfo?.SeriesCount ?? null,
     plexLibrariesDetected: Array.isArray(plexRoot?.MediaContainer?.Directory)
