@@ -14,6 +14,7 @@ const defaultStore = {
     accountToken: null,
     serverToken: null,
     serverUrl: null,
+    serverId: null,
     serverName: null,
     updatedAt: null
   },

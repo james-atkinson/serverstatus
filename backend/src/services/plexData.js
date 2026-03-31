@@ -1,6 +1,6 @@
 import axios from "axios";
 import { XMLParser } from "fast-xml-parser";
-import { getPlexConnection } from "./plexAuth.js";
+import { getPlexAuthState, getPlexConnection } from "./plexAuth.js";
 
 const xmlParser = new XMLParser({
   ignoreAttributes: false,
@@ -15,13 +15,11 @@ const asArray = (value) => {
 };
 
 const buildPlexWebUrl = (entry) => {
-  const connection = getPlexConnection();
-  const base = connection?.url;
-  if (!base) return null;
-
+  const auth = getPlexAuthState();
+  const serverId = auth?.serverId;
   const key = entry?.key || (entry?.ratingKey ? `/library/metadata/${entry.ratingKey}` : null);
-  if (!key) return null;
-  return `${base}/web/index.html#!/details?key=${encodeURIComponent(key)}`;
+  if (!serverId || !key) return null;
+  return `https://app.plex.tv/desktop/#!/server/${encodeURIComponent(serverId)}/details?key=${encodeURIComponent(key)}`;
 };
 
 const pickArt = (entry) => {

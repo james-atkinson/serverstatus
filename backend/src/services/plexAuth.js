@@ -68,6 +68,7 @@ const resolvePlexServer = async (accountToken) => {
   return {
     serverUrl: serverUrl.replace(/\/$/, ""),
     serverToken,
+    serverId: selected.clientIdentifier || selected.uuid || selected.machineIdentifier || null,
     serverName: selected.name || "Plex Server"
   };
 };
@@ -86,6 +87,7 @@ export const checkPlexDeviceAuthStatus = async (pinId) => {
       accountToken: pin.authToken,
       serverToken: resolved.serverToken,
       serverUrl: resolved.serverUrl,
+      serverId: resolved.serverId,
       serverName: resolved.serverName,
       updatedAt: new Date().toISOString()
     };
@@ -94,7 +96,8 @@ export const checkPlexDeviceAuthStatus = async (pinId) => {
   return {
     authorized: true,
     serverName: resolved.serverName,
-    serverUrl: resolved.serverUrl
+    serverUrl: resolved.serverUrl,
+    serverId: resolved.serverId
   };
 };
 
@@ -106,6 +109,7 @@ export const getPlexAuthState = () => {
         accountToken: null,
         serverToken: serviceById.plex.token,
         serverUrl: serviceById.plex.url,
+        serverId: null,
         serverName: "Plex (env fallback)",
         updatedAt: null
       }
@@ -116,6 +120,7 @@ export const getPlexAuthState = () => {
     connected: Boolean(effective?.connected),
     serverName: effective?.serverName || null,
     serverUrl: effective?.serverUrl || null,
+    serverId: effective?.serverId || null,
     updatedAt: effective?.updatedAt || null
   };
 };
