@@ -14,12 +14,34 @@ const asArray = (value) => {
   return Array.isArray(value) ? value : [value];
 };
 
-const buildPlexWebUrl = (entry) => {
+const fetchPlexServerId = async () => {
   const auth = getPlexAuthState();
-  const serverId = auth?.serverId;
+  if (auth?.serverId) return auth.serverId;
+
+  const connection = getPlexConnection();
+  if (!connection?.url || !connection?.token) return null;
+
+  try {
+    const response = await plexClient.get(`${connection.url}/`, {
+      headers: { Accept: "application/json", "X-Plex-Token": connection.token },
+      params: { "X-Plex-Token": connection.token }
+    });
+    const container = response?.data?.MediaContainer || {};
+    return container.machineIdentifier || container.clientIdentifier || null;
+  } catch {
+    return null;
+  }
+};
+
+const buildPlexWebUrl = (entry, serverId) => {
+  const auth = getPlexAuthState();
+  const resolvedServerId = serverId || auth?.serverId || null;
   const key = entry?.key || (entry?.ratingKey ? `/library/metadata/${entry.ratingKey}` : null);
-  if (!serverId || !key) return null;
-  return `https://app.plex.tv/desktop/#!/server/${encodeURIComponent(serverId)}/details?key=${encodeURIComponent(key)}`;
+  if (!key) return null;
+  if (resolvedServerId) {
+    return `https://app.plex.tv/desktop/#!/server/${encodeURIComponent(resolvedServerId)}/details?key=${encodeURIComponent(key)}`;
+  }
+  return `https://app.plex.tv/desktop/#!/details?key=${encodeURIComponent(key)}`;
 };
 
 const pickArt = (entry) => {
@@ -89,6 +111,8 @@ export const getPlexNowPlaying = async () => {
       ...asArray(altContainer.Photo)
     );
   }
+  const serverId = await fetchPlexServerId();
+
   return sessions.map((entry) => {
     const user = asArray(entry.User)[0] || {};
     const player = asArray(entry.Player)[0] || {};
@@ -110,7 +134,7 @@ export const getPlexNowPlaying = async () => {
       startedAt: entry.lastViewedAt || null,
       artPath: art.artPath,
       artUrl: art.artUrl,
-      appUrl: buildPlexWebUrl(entry)
+      appUrl: buildPlexWebUrl(entry, serverId)
     };
   });
 };
@@ -122,6 +146,7 @@ export const getPlexHistory = async (limit = 20) => {
     "X-Plex-Container-Size": Math.max(1, Math.min(100, Number(limit) || 20))
   });
   const videos = [...asArray(container.Metadata), ...asArray(container.Video)];
+  const serverId = await fetchPlexServerId();
 
   return videos.map((entry) => {
     const title = entry.title || "Unknown Title";
@@ -139,7 +164,7 @@ export const getPlexHistory = async (limit = 20) => {
       viewOffsetMs: entry.viewOffset ? Number(entry.viewOffset) : null,
       artPath: art.artPath,
       artUrl: art.artUrl,
-      appUrl: buildPlexWebUrl(entry)
+      appUrl: buildPlexWebUrl(entry, serverId)
     };
   });
 };
