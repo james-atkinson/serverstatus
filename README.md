@@ -42,3 +42,4 @@ bash ./scripts/deploy-ubuntu.sh
 Server binds to `PORT` (default `80`).
 The deploy script installs dependencies, builds the app, writes a systemd unit,
 and enables autostart for `media-server-status`.
+It does not require globally installed `pnpm` or `corepack` on the target host.

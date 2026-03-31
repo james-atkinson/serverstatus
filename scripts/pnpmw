@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PNPM_VERSION="${PNPM_VERSION:-10.7.0}"
+
+if command -v pnpm >/dev/null 2>&1; then
+  exec pnpm "$@"
+fi
+
+if command -v corepack >/dev/null 2>&1; then
+  exec corepack pnpm "$@"
+fi
+
+if command -v npm >/dev/null 2>&1; then
+  exec npm exec --yes "pnpm@${PNPM_VERSION}" -- "$@"
+fi
+
+printf "No pnpm runner found (pnpm, corepack, or npm is required).\n" >&2
+exit 1

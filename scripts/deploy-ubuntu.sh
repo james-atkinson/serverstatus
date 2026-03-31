@@ -26,7 +26,7 @@ fi
 
 require_cmd sudo
 require_cmd node
-require_cmd corepack
+require_cmd npm
 require_cmd systemctl
 
 log "Preparing environment file"
@@ -47,9 +47,9 @@ fi
 
 log "Installing dependencies and building"
 cd "${REPO_ROOT}"
-corepack enable
-corepack pnpm install
-corepack pnpm build
+"${REPO_ROOT}/scripts/pnpmw" --version >/dev/null
+"${REPO_ROOT}/scripts/pnpmw" install --frozen-lockfile=false
+"${REPO_ROOT}/scripts/pnpmw" build
 
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 
@@ -65,8 +65,9 @@ Type=simple
 WorkingDirectory=${REPO_ROOT}
 EnvironmentFile=${ENV_FILE}
 Environment=NODE_ENV=production
+Environment=PNPM_VERSION=10.7.0
 Environment=PATH=/usr/local/bin:/usr/bin:/bin
-ExecStart=/usr/bin/env corepack pnpm start
+ExecStart=${REPO_ROOT}/scripts/pnpmw start
 Restart=always
 RestartSec=5
 User=${RUN_USER}
