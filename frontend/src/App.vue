@@ -186,7 +186,7 @@
                   <div class="recent-episode-meta">
                     <strong>{{ episode.seriesTitle }}</strong>
                     <span>S{{ pad2(episode.seasonNumber) }}E{{ pad2(episode.episodeNumber) }} - {{ episode.episodeTitle }}</span>
-                    <span class="recent-episode-time">{{ formatTimestamp(episode.date) }}</span>
+                    <span class="recent-episode-time">{{ formatRelativeDate(episode.date) }}</span>
                   </div>
                 </a>
               </li>
@@ -256,7 +256,7 @@
                   <div class="recent-episode-meta">
                     <strong>{{ movie.title }}</strong>
                     <span>{{ movie.year || "Unknown Year" }}</span>
-                    <span class="recent-episode-time">{{ formatTimestamp(movie.releaseDate) }}</span>
+                    <span class="recent-episode-time">{{ formatRelativeDate(movie.releaseDate) }}</span>
                   </div>
                 </a>
               </li>
@@ -536,6 +536,19 @@ const radarrItemUrl = (movie) => {
 const formatTimestamp = (value) => {
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? "n/a" : parsed.toLocaleString();
+};
+const formatRelativeDate = (value) => {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "n/a";
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfTarget = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+  const diffDays = Math.round((startOfTarget.getTime() - startOfToday.getTime()) / (24 * 60 * 60 * 1000));
+
+  if (diffDays <= 0) return "Today";
+  if (diffDays === 1) return "Tomorrow";
+  return `In ${diffDays} days`;
 };
 
 const stopPlexPolling = () => {
