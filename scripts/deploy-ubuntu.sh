@@ -29,6 +29,12 @@ require_cmd node
 require_cmd npm
 require_cmd systemctl
 
+NODE_BIN="$(command -v node)"
+if [[ -z "${NODE_BIN}" ]]; then
+  printf "[deploy] Could not resolve node binary path.\n" >&2
+  exit 1
+fi
+
 log "Preparing environment file"
 if [[ ! -f "${ENV_FILE}" ]]; then
   if [[ -f "$REPO_ROOT/.env.example" ]]; then
@@ -65,8 +71,8 @@ Type=simple
 WorkingDirectory=${REPO_ROOT}
 EnvironmentFile=${ENV_FILE}
 Environment=NODE_ENV=production
-Environment=PATH=/usr/local/bin:/usr/bin:/bin:/snap/bin
-ExecStart=/usr/bin/env node ${REPO_ROOT}/backend/src/server.js
+Environment=PATH=/usr/local/bin:/usr/bin:/bin:/snap/bin:$(dirname "${NODE_BIN}")
+ExecStart=${NODE_BIN} ${REPO_ROOT}/backend/src/server.js
 Restart=always
 RestartSec=5
 User=${RUN_USER}
