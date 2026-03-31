@@ -9,6 +9,7 @@
 
     <main class="dashboard">
       <section class="top-stack">
+      <div class="grid-row">
       <StatusCard title="System Health">
         <div v-if="system">
           <p>Host: {{ system.hostname }}</p>
@@ -43,6 +44,25 @@
         </div>
         <p v-else>Loading system data...</p>
       </StatusCard>
+
+      <StatusCard title="Services">
+        <ul class="service-list">
+          <li v-for="svc in visibleServices" :key="svc.serviceName ?? svc.name">
+            <a
+              class="service-link"
+              :href="svc.appUrl || svc.url || '#'"
+              :target="svc.appUrl || svc.url ? '_blank' : null"
+              rel="noreferrer noopener"
+            >
+              {{ svc.serviceName ?? svc.name }}
+            </a>
+            <span :class="'state-' + (svc.status || (svc.enabled ? 'up' : 'disabled'))">
+              {{ svc.status || (svc.enabled ? "up" : "disabled") }}
+            </span>
+          </li>
+        </ul>
+      </StatusCard>
+      </div>
 
       <StatusCard title="Network" subtitle="Current checks + latest speed test">
         <template #header-right>
@@ -313,23 +333,6 @@
 
       </StatusCard>
 
-      <StatusCard title="Services">
-        <ul class="service-list">
-          <li v-for="svc in visibleServices" :key="svc.serviceName ?? svc.name">
-            <a
-              class="service-link"
-              :href="svc.appUrl || svc.url || '#'"
-              :target="svc.appUrl || svc.url ? '_blank' : null"
-              rel="noreferrer noopener"
-            >
-              {{ svc.serviceName ?? svc.name }}
-            </a>
-            <span :class="'state-' + (svc.status || (svc.enabled ? 'up' : 'disabled'))">
-              {{ svc.status || (svc.enabled ? "up" : "disabled") }}
-            </span>
-          </li>
-        </ul>
-      </StatusCard>
       </div>
       </section>
     </main>
