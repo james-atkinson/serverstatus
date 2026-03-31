@@ -80,6 +80,12 @@ body {
   gap: 12px;
 }
 
+.top-stack {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
 .services-stack {
   display: grid;
   gap: 12px;

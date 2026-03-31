@@ -8,7 +8,7 @@
     </header>
 
     <main class="dashboard">
-      <section class="grid-row">
+      <section class="top-stack">
       <StatusCard title="System Health">
         <div v-if="system">
           <p>Host: {{ system.hostname }}</p>
