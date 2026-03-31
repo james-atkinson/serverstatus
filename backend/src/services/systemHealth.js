@@ -1,5 +1,6 @@
 import os from "node:os";
 import { execFile } from "node:child_process";
+import fs from "node:fs/promises";
 import { promisify } from "node:util";
 import si from "systeminformation";
 import { config } from "../config/env.js";
@@ -18,6 +19,20 @@ const getDirectorySizeBytes = async (targetPath) => {
     const sizeInKiB = Number.parseInt((stdout || "").trim().split(/\s+/)[0], 10);
     if (!Number.isFinite(sizeInKiB) || sizeInKiB < 0) return null;
     return sizeInKiB * 1024;
+  } catch {
+    return null;
+  }
+};
+
+const getFilesystemUsageFromPath = async (targetPath) => {
+  try {
+    const stat = await fs.statfs(targetPath);
+    const blockSize = Number(stat.bsize || stat.frsize || 0);
+    const total = Number(stat.blocks || 0) * blockSize;
+    const free = Number(stat.bavail || stat.bfree || 0) * blockSize;
+    const used = Math.max(0, total - free);
+    const usePct = total > 0 ? Number(((used / total) * 100).toFixed(2)) : 0;
+    return { total, used, free, usePct };
   } catch {
     return null;
   }
@@ -68,7 +83,8 @@ export const getSystemHealth = async () => {
         });
         const directoryBytes = await getDirectorySizeBytes(targetPath);
         const configuredFilesystem = allFilesystems.find((entry) => entry.fs === filesystemName);
-        const total = configuredFilesystem?.total || matched?.total || 0;
+        const usageFromPath = await getFilesystemUsageFromPath(targetPath);
+        const total = configuredFilesystem?.total || usageFromPath?.total || matched?.total || 0;
 
         return {
           id: `path:${filesystemName}:${targetPath}`,
@@ -76,6 +92,10 @@ export const getSystemHealth = async () => {
           path: targetPath,
           fs: filesystemName,
           mount: configuredFilesystem?.mount || matched?.mount || "",
+          filesystemTotal: usageFromPath?.total || 0,
+          filesystemUsed: usageFromPath?.used || 0,
+          filesystemFree: usageFromPath?.free || 0,
+          filesystemUsePct: usageFromPath?.usePct || 0,
           directoryBytes,
           usePctOfFilesystem: total && directoryBytes !== null ? Number(((directoryBytes / total) * 100).toFixed(2)) : 0
         };
@@ -93,10 +113,10 @@ export const getSystemHealth = async () => {
         path: fallback?.mount || pathMonitor.mount || pathMonitor.fs,
         fs: pathMonitor.fs,
         mount: fallback?.mount || pathMonitor.mount || "",
-        total: fallback?.total || 0,
-        used: fallback?.used || 0,
-        free: fallback?.free || 0,
-        usePct: fallback?.usePct || 0,
+        total: fallback?.total || pathMonitor.filesystemTotal || 0,
+        used: fallback?.used || pathMonitor.filesystemUsed || 0,
+        free: fallback?.free || pathMonitor.filesystemFree || 0,
+        usePct: fallback?.usePct || pathMonitor.filesystemUsePct || 0,
         paths: []
       };
       fsByName.set(pathMonitor.fs, dynamicFs);
