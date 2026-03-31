@@ -65,7 +65,7 @@
                   <span>{{ filesystem.fs }}</span>
                   <span>{{ filesystem.usePct }}% ({{ toGiB(filesystem.used) }} / {{ toGiB(filesystem.total) }} GiB)</span>
                 </div>
-                <div class="recent-episode-time">{{ filesystem.fs }}{{ filesystem.mount ? ` @ ${filesystem.mount}` : "" }}</div>
+                <div class="recent-episode-time">{{ filesystem.fs }}</div>
                 <div class="progress-track">
                   <div class="progress-fill progress-fill-disk" :style="{ width: `${Math.min(100, filesystem.usePct)}%` }"></div>
                 </div>
