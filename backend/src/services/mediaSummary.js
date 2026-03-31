@@ -45,8 +45,10 @@ export const getMediaSummary = async () => {
 
   const now = new Date();
   const inThirtyDays = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const inNinetyDays = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
   const start = now.toISOString().slice(0, 10);
-  const end = inThirtyDays.toISOString().slice(0, 10);
+  const sonarrEnd = inThirtyDays.toISOString().slice(0, 10);
+  const radarrEnd = inNinetyDays.toISOString().slice(0, 10);
 
   const [jellyInfo, plexRoot, sonarrSeries, radarrMovies, sonarrHistory, sonarrCalendar, radarrCalendar] = await Promise.all([
     jellyfin?.enabled
@@ -71,13 +73,13 @@ export const getMediaSummary = async () => {
       : null,
     sonarr?.enabled
       ? safeGet(
-          `${sonarr.url}/api/v3/calendar?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&includeSeries=true`,
+          `${sonarr.url}/api/v3/calendar?start=${encodeURIComponent(start)}&end=${encodeURIComponent(sonarrEnd)}&includeSeries=true`,
           { headers: { "X-Api-Key": sonarr.token } }
         )
       : null,
     radarr?.enabled
       ? safeGet(
-          `${radarr.url}/api/v3/calendar?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`,
+          `${radarr.url}/api/v3/calendar?start=${encodeURIComponent(start)}&end=${encodeURIComponent(radarrEnd)}`,
           { headers: { "X-Api-Key": radarr.token } }
         )
       : null

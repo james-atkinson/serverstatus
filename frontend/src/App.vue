@@ -218,7 +218,7 @@
             </p>
           </div>
           <div class="recent-episodes">
-            <p class="recent-episodes-title">Coming Soon Movies (Next 30 Days)</p>
+            <p class="recent-episodes-title">Coming Soon Movies (Next 90 Days)</p>
             <ul class="recent-episode-list">
               <li v-for="movie in media.radarrComingSoon || []" :key="`soon-movie-${movie.id}`">
                 <a class="recent-item-link" :href="radarrItemUrl(movie)" target="_blank" rel="noreferrer noopener">
@@ -237,7 +237,7 @@
               </li>
             </ul>
             <p v-if="!(media.radarrComingSoon || []).length" class="speed-history-empty">
-              No upcoming Radarr releases in the next 30 days.
+              No upcoming Radarr releases in the next 90 days.
             </p>
           </div>
         </div>
