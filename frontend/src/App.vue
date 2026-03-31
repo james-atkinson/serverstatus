@@ -56,15 +56,16 @@
           </div>
           <div class="metric-block">
             <div class="metric-row">
-              <span>Disk Filesystems</span>
-              <span>{{ (system.filesystems || []).length }} volumes</span>
+              <span>Disk Monitors</span>
+              <span>{{ (system.filesystems || []).length }} items</span>
             </div>
             <div class="filesystem-list">
-              <div v-for="filesystem in system.filesystems || []" :key="filesystem.fs" class="filesystem-item">
+              <div v-for="filesystem in system.filesystems || []" :key="filesystem.id || `${filesystem.fs}-${filesystem.path}`" class="filesystem-item">
                 <div class="metric-row">
-                  <span>{{ filesystem.fs }}</span>
+                  <span>{{ filesystem.label || filesystem.path || filesystem.fs }}</span>
                   <span>{{ filesystem.usePct }}% ({{ toGiB(filesystem.used) }} / {{ toGiB(filesystem.total) }} GiB)</span>
                 </div>
+                <div class="recent-episode-time">{{ filesystem.fs }}{{ filesystem.mount ? ` @ ${filesystem.mount}` : "" }}</div>
                 <div class="progress-track">
                   <div class="progress-fill progress-fill-disk" :style="{ width: `${Math.min(100, filesystem.usePct)}%` }"></div>
                 </div>

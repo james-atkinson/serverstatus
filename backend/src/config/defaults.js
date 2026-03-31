@@ -14,5 +14,7 @@ export const APP_DEFAULTS = {
   CHECK_INTERVAL_SEC: 60,
   SPEEDTEST_INTERVAL_MIN: 30,
   SQLITE_PATH: "./data/status.db",
-  PING_TARGETS: "1.1.1.1,8.8.8.8,192.168.1.1"
+  PING_TARGETS: "1.1.1.1,8.8.8.8,192.168.1.1",
+  MONITORED_FILESYSTEMS: "/dev/sda1",
+  MONITORED_PATHS: "/home/media/TV Shows,/home/media/Movies"
 };

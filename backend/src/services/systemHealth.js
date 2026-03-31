@@ -1,5 +1,7 @@
 import os from "node:os";
+import fs from "node:fs/promises";
 import si from "systeminformation";
+import { config } from "../config/env.js";
 
 const pickPrimaryNic = (stats) => {
   if (!Array.isArray(stats) || !stats.length) return null;
@@ -17,17 +19,80 @@ export const getSystemHealth = async () => {
     si.osInfo()
   ]);
 
-  const minFilesystemSizeBytes = 1024 * 1024 * 1024;
-  const filesystems = fsSize
-    .filter((entry) => Number(entry.size) > minFilesystemSizeBytes)
+  const configuredFs = new Set(config.monitoredFilesystems || []);
+  const allFilesystems = fsSize.map((entry) => ({
+    fs: entry.fs || entry.mount || "unknown",
+    mount: entry.mount || "",
+    total: entry.size,
+    used: entry.used,
+    free: Math.max(0, entry.size - entry.used),
+    usePct: Number((entry.use ?? ((entry.used / entry.size) * 100)).toFixed(2))
+  }));
+
+  const filesystemMonitors = allFilesystems
+    .filter((entry) => !configuredFs.size || configuredFs.has(entry.fs))
     .map((entry) => ({
-      fs: entry.fs || entry.mount || "unknown",
-      mount: entry.mount || "",
-      total: entry.size,
-      used: entry.used,
-      free: Math.max(0, entry.size - entry.used),
-      usePct: Number((entry.use ?? ((entry.used / entry.size) * 100)).toFixed(2))
+      id: `fs:${entry.fs}`,
+      label: entry.fs,
+      path: entry.mount || entry.fs,
+      ...entry
     }));
+
+  const mountCandidates = allFilesystems.slice().sort((a, b) => (b.mount || "").length - (a.mount || "").length);
+  const pathMonitors = await Promise.all(
+    (config.monitoredPaths || []).map(async (targetPath) => {
+      const matched = mountCandidates.find((entry) => {
+        const mount = entry.mount || "/";
+        return targetPath === mount || targetPath.startsWith(`${mount}/`) || (mount === "/" && targetPath.startsWith("/"));
+      });
+      try {
+        const stat = await fs.statfs(targetPath);
+        const blockSize = Number(stat.bsize || stat.frsize || 0);
+        const total = Number(stat.blocks || 0) * blockSize;
+        const free = Number(stat.bavail || stat.bfree || 0) * blockSize;
+        const used = Math.max(0, total - free);
+        const usePct = total > 0 ? Number(((used / total) * 100).toFixed(2)) : 0;
+        return {
+          id: `path:${targetPath}`,
+          label: targetPath,
+          path: targetPath,
+          fs: matched?.fs || "unknown",
+          mount: matched?.mount || "",
+          total,
+          used,
+          free,
+          usePct
+        };
+      } catch {
+        if (!matched) {
+          return {
+            id: `path:${targetPath}`,
+            label: targetPath,
+            path: targetPath,
+            fs: "unknown",
+            mount: "",
+            total: 0,
+            used: 0,
+            free: 0,
+            usePct: 0
+          };
+        }
+        return {
+          id: `path:${targetPath}`,
+          label: targetPath,
+          path: targetPath,
+          fs: matched.fs,
+          mount: matched.mount,
+          total: matched.total,
+          used: matched.used,
+          free: matched.free,
+          usePct: matched.usePct
+        };
+      }
+    })
+  );
+
+  const filesystems = [...filesystemMonitors, ...pathMonitors];
 
   const primaryNic = pickPrimaryNic(netStats);
 

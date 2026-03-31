@@ -36,6 +36,14 @@ export const config = {
   sqlitePath: process.env.SQLITE_PATH || APP_DEFAULTS.SQLITE_PATH,
   checkIntervalSec: asInt(process.env.CHECK_INTERVAL_SEC, APP_DEFAULTS.CHECK_INTERVAL_SEC),
   speedtestIntervalMin: asInt(process.env.SPEEDTEST_INTERVAL_MIN, APP_DEFAULTS.SPEEDTEST_INTERVAL_MIN),
+  monitoredFilesystems: (process.env.MONITORED_FILESYSTEMS || APP_DEFAULTS.MONITORED_FILESYSTEMS)
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean),
+  monitoredPaths: (process.env.MONITORED_PATHS || APP_DEFAULTS.MONITORED_PATHS)
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean),
   pingTargets: (process.env.PING_TARGETS || APP_DEFAULTS.PING_TARGETS)
     .split(",")
     .map((entry) => entry.trim())
