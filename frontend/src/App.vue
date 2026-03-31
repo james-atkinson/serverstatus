@@ -221,20 +221,22 @@
           <div class="recent-episodes">
             <ul class="recent-episode-list">
               <li v-for="item in plexNowPlaying" :key="item.sessionId || item.title">
-                <img
-                  class="recent-episode-art"
-                  :src="resolvePlexArt(item)"
-                  :alt="`${item.title} artwork`"
-                  loading="lazy"
-                />
-                <div class="progress-track now-playing-progress-track">
-                  <div class="progress-fill now-playing-progress-fill" :style="{ width: `${Math.min(100, item.progressPct || 0)}%` }"></div>
-                </div>
-                <div class="recent-episode-meta">
-                  <strong>{{ item.user }}</strong>
-                  <span>{{ item.grandparentTitle ? `${item.grandparentTitle} - ` : "" }}{{ item.title }}</span>
-                  <span class="recent-episode-time">{{ item.client }} | {{ item.state }} | {{ item.progressPct }}%</span>
-                </div>
+                <a class="recent-item-link" :href="item.appUrl || '#'" :target="item.appUrl ? '_blank' : null" rel="noreferrer noopener">
+                  <img
+                    class="recent-episode-art"
+                    :src="resolvePlexArt(item)"
+                    :alt="`${item.title} artwork`"
+                    loading="lazy"
+                  />
+                  <div class="progress-track now-playing-progress-track">
+                    <div class="progress-fill now-playing-progress-fill" :style="{ width: `${Math.min(100, item.progressPct || 0)}%` }"></div>
+                  </div>
+                  <div class="recent-episode-meta">
+                    <strong>{{ item.user }}</strong>
+                    <span>{{ item.grandparentTitle ? `${item.grandparentTitle} - ` : "" }}{{ item.title }}</span>
+                    <span class="recent-episode-time">{{ item.client }} | {{ item.state }} | {{ item.progressPct }}%</span>
+                  </div>
+                </a>
               </li>
             </ul>
             <p v-if="!plexNowPlaying.length" class="speed-history-empty">Nothing is currently playing.</p>
@@ -464,13 +466,17 @@ const resolvePlexArt = (item) => {
 };
 const sonarrItemUrl = (episode) => {
   const base = media.value?.sonarrBaseUrl;
-  if (!base || !episode?.seriesId) return "#";
-  return `${base}/series/${episode.seriesId}`;
+  if (!base) return "#";
+  if (episode?.seriesSlug) return `${base}/series/${episode.seriesSlug}`;
+  if (episode?.seriesId) return `${base}/series/${episode.seriesId}`;
+  return "#";
 };
 const radarrItemUrl = (movie) => {
   const base = media.value?.radarrBaseUrl;
-  if (!base || !movie?.movieId) return "#";
-  return `${base}/movie/${movie.movieId}`;
+  if (!base) return "#";
+  if (movie?.movieSlug) return `${base}/movie/${movie.movieSlug}`;
+  if (movie?.movieId) return `${base}/movie/${movie.movieId}`;
+  return "#";
 };
 const formatTimestamp = (value) => {
   const parsed = new Date(value);

@@ -78,6 +78,7 @@ export const getMediaSummary = async () => {
       return {
         id: row.id,
         seriesId: row.series?.id ?? null,
+        seriesSlug: row.series?.titleSlug || null,
         episodeId: row.episode?.id ?? null,
         seriesTitle: row.series?.title || "Unknown Series",
         seasonNumber: row.episode?.seasonNumber,
@@ -113,6 +114,7 @@ export const getMediaSummary = async () => {
       return {
         id: movie.id,
         movieId: movie.id,
+        movieSlug: movie.titleSlug || null,
         title: movie.title || "Unknown Movie",
         year: movie.year ?? null,
         added: movie.movieFile?.dateAdded || movie.added || movie.dateAdded || null,
