@@ -26,6 +26,7 @@ const runSpeedChecks = async () => {
 export const startScheduler = async () => {
   await runServiceChecks();
   await runNetworkChecks();
+  await runSpeedChecks();
 
   const checkMinutes = Math.max(1, Math.floor(config.checkIntervalSec / 60));
   const speedMinutes = Math.max(1, Math.floor(config.speedtestIntervalMin));
