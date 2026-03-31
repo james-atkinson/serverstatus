@@ -77,9 +77,8 @@ Restart=always
 RestartSec=5
 User=${RUN_USER}
 Group=${RUN_GROUP}
-AmbientCapabilities=CAP_NET_BIND_SERVICE
-CapabilityBoundingSet=CAP_NET_BIND_SERVICE
-NoNewPrivileges=true
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE CAP_NET_RAW
+AmbientCapabilities=CAP_NET_BIND_SERVICE CAP_NET_RAW
 
 [Install]
 WantedBy=multi-user.target
