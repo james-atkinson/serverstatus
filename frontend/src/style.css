@@ -179,12 +179,20 @@ body {
   text-transform: uppercase;
 }
 
-.system-inline-metrics {
-  border: 1px solid var(--border);
-  padding: 8px;
-  margin: 0 0 10px;
-  font-size: 13px;
-  color: var(--text);
+.system-grid-compact {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.system-grid-compact .system-grid-item {
+  padding: 6px;
+  gap: 2px;
+}
+
+.system-grid-compact .system-grid-item strong {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .progress-track {

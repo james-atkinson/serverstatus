@@ -26,12 +26,25 @@
               <strong>{{ system.kernelVersion || "n/a" }}</strong>
             </div>
           </div>
-          <p class="system-inline-metrics">
-            CPU {{ system.cpuUsagePct }}% |
-            Load {{ formatLoadAvg(system.loadAvg) }} |
-            Disk R {{ formatRate(system.diskIo?.readBytesSec) }} / W {{ formatRate(system.diskIo?.writeBytesSec) }} (TPS {{ Number(system.diskIo?.tps || 0).toFixed(1) }}) |
-            Net {{ system.network?.iface || "n/a" }} RX {{ formatRate(system.network?.rxBytesSec) }} / TX {{ formatRate(system.network?.txBytesSec) }}
-          </p>
+          <div class="system-grid system-grid-compact">
+            <div class="system-grid-item">
+              <span class="system-grid-label">CPU</span>
+              <strong>{{ system.cpuUsagePct }}%</strong>
+            </div>
+            <div class="system-grid-item">
+              <span class="system-grid-label">Load</span>
+              <strong>{{ formatLoadAvg(system.loadAvg) }}</strong>
+            </div>
+            <div class="system-grid-item">
+              <span class="system-grid-label">Disk I/O</span>
+              <strong>R {{ formatRate(system.diskIo?.readBytesSec) }} / W {{ formatRate(system.diskIo?.writeBytesSec) }}</strong>
+              <span class="recent-episode-time">TPS {{ Number(system.diskIo?.tps || 0).toFixed(1) }}</span>
+            </div>
+            <div class="system-grid-item">
+              <span class="system-grid-label">Network</span>
+              <strong>{{ system.network?.iface || "n/a" }} RX {{ formatRate(system.network?.rxBytesSec) }} / TX {{ formatRate(system.network?.txBytesSec) }}</strong>
+            </div>
+          </div>
           <div class="metric-block">
             <div class="metric-row">
               <span>Memory</span>
