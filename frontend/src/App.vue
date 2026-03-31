@@ -186,7 +186,7 @@
                   <div class="recent-episode-meta">
                     <strong>{{ episode.seriesTitle }}</strong>
                     <span>S{{ pad2(episode.seasonNumber) }}E{{ pad2(episode.episodeNumber) }} - {{ episode.episodeTitle }}</span>
-                    <span class="recent-episode-time">{{ formatRelativeDate(episode.date) }}</span>
+                    <span class="recent-episode-time">{{ formatTimestamp(episode.date) }}</span>
                   </div>
                 </a>
               </li>
@@ -209,7 +209,7 @@
                   <div class="recent-episode-meta">
                     <strong>{{ episode.seriesTitle }}</strong>
                     <span>S{{ pad2(episode.seasonNumber) }}E{{ pad2(episode.episodeNumber) }} - {{ episode.episodeTitle }}</span>
-                    <span class="recent-episode-time">{{ formatTimestamp(episode.date) }}</span>
+                    <span class="recent-episode-time">{{ formatRelativeDate(episode.date) }}</span>
                   </div>
                 </a>
               </li>
@@ -548,7 +548,13 @@ const formatRelativeDate = (value) => {
 
   if (diffDays <= 0) return "Today";
   if (diffDays === 1) return "Tomorrow";
-  return `In ${diffDays} days`;
+  if (diffDays < 7) return `In ${diffDays} days`;
+
+  const weeks = Math.round(diffDays / 7);
+  if (diffDays < 30) return `In ${weeks} ${weeks === 1 ? "week" : "weeks"}`;
+
+  const months = Math.round(diffDays / 30);
+  return `In ${months} ${months === 1 ? "month" : "months"}`;
 };
 
 const stopPlexPolling = () => {
