@@ -1,0 +1,15 @@
+{
+  "name": "media-server-status",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.7.0",
+  "scripts": {
+    "dev": "concurrently \"PORT=3001 pnpm --filter media-server-status-backend dev\" \"pnpm --filter media-server-status-frontend dev\"",
+    "build": "pnpm --filter media-server-status-frontend build && pnpm --filter media-server-status-backend build",
+    "start": "pnpm --filter media-server-status-backend start",
+    "test": "pnpm --filter media-server-status-backend test && pnpm --filter media-server-status-frontend test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
