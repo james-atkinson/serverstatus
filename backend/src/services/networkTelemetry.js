@@ -4,6 +4,16 @@ import { promisify } from "node:util";
 import { config } from "../config/env.js";
 
 const execFileAsync = promisify(execFile);
+const pingDebugEnabled = String(process.env.PING_DEBUG || "").toLowerCase() === "true";
+
+const logPing = (message, payload = null) => {
+  if (!pingDebugEnabled) return;
+  if (payload) {
+    console.log(`[ping-debug] ${message}`, payload);
+    return;
+  }
+  console.log(`[ping-debug] ${message}`);
+};
 
 const normalizePingTarget = (target) => {
   const raw = String(target || "").trim();
@@ -29,6 +39,7 @@ const parsePing = (output) => {
 
 export const runPingChecks = async () => {
   const now = new Date().toISOString();
+  logPing("starting ping checks", { targets: config.pingTargets, ts: now });
   const results = await Promise.all(
     config.pingTargets.map(async (target) => {
       const pingTarget = normalizePingTarget(target);
@@ -38,6 +49,13 @@ export const runPingChecks = async () => {
         });
         const parsed = parsePing([stdout, stderr].filter(Boolean).join("\n"));
         const packetLossPct = parsed.packetLossPct ?? 0;
+        logPing("ping command success", {
+          target,
+          pingTarget,
+          latencyMs: parsed.latencyMs,
+          packetLossPct,
+          raw: [stdout, stderr].filter(Boolean).join("\n")
+        });
         return {
           ts: now,
           target,
@@ -45,7 +63,15 @@ export const runPingChecks = async () => {
           packetLossPct,
           success: packetLossPct < 100
         };
-      } catch {
+      } catch (error) {
+        logPing("ping command failed", {
+          target,
+          pingTarget,
+          message: error?.message || "unknown error",
+          code: error?.code || null,
+          stdout: error?.stdout || null,
+          stderr: error?.stderr || null
+        });
         return {
           ts: now,
           target,
@@ -56,6 +82,13 @@ export const runPingChecks = async () => {
       }
     })
   );
+  const up = results.filter((entry) => entry.success).length;
+  logPing("completed ping checks", {
+    total: results.length,
+    up,
+    down: results.length - up,
+    results
+  });
   return results;
 };
 
