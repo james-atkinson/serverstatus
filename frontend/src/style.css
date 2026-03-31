@@ -153,6 +153,36 @@ body {
   font-size: 13px;
 }
 
+.system-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.system-grid-metrics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.system-grid-item {
+  border: 1px solid var(--border);
+  padding: 8px;
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.system-grid-item strong {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.system-grid-label {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
 .progress-track {
   height: 12px;
   border: 1px solid var(--border);
@@ -404,6 +434,11 @@ body {
 }
 
 @media (max-width: 600px) {
+  .system-grid,
+  .system-grid-metrics {
+    grid-template-columns: 1fr;
+  }
+
   .speed-metrics {
     grid-template-columns: 1fr;
   }
