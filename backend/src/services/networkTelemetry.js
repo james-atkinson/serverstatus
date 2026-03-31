@@ -5,11 +5,24 @@ import { config } from "../config/env.js";
 
 const execFileAsync = promisify(execFile);
 
-const parsePing = (stdout) => {
-  const lossMatch = stdout.match(/([0-9.]+)% packet loss/);
-  const latencyMatch = stdout.match(/=\s*[0-9.]+\/([0-9.]+)\/[0-9.]+\/[0-9.]+\s*ms/);
+const normalizePingTarget = (target) => {
+  const raw = String(target || "").trim();
+  if (!raw) return "";
+  if (raw.includes("://")) {
+    try {
+      return new URL(raw).hostname || raw;
+    } catch {
+      return raw;
+    }
+  }
+  return raw.replace(/^\/+|\/+$/g, "");
+};
+
+const parsePing = (output) => {
+  const lossMatch = output.match(/([0-9.]+)%\s+packet loss/);
+  const latencyMatch = output.match(/=\s*[0-9.]+\/([0-9.]+)\/[0-9.]+\/[0-9.]+\s*ms/);
   return {
-    packetLossPct: lossMatch ? Number(lossMatch[1]) : 100,
+    packetLossPct: lossMatch ? Number(lossMatch[1]) : null,
     latencyMs: latencyMatch ? Number(latencyMatch[1]) : null
   };
 };
@@ -18,17 +31,19 @@ export const runPingChecks = async () => {
   const now = new Date().toISOString();
   const results = await Promise.all(
     config.pingTargets.map(async (target) => {
+      const pingTarget = normalizePingTarget(target);
       try {
-        const { stdout } = await execFileAsync("ping", ["-c", "4", "-q", target], {
+        const { stdout, stderr } = await execFileAsync("ping", ["-c", "4", "-q", pingTarget], {
           timeout: 10000
         });
-        const parsed = parsePing(stdout);
+        const parsed = parsePing([stdout, stderr].filter(Boolean).join("\n"));
+        const packetLossPct = parsed.packetLossPct ?? 0;
         return {
           ts: now,
           target,
           latencyMs: parsed.latencyMs,
-          packetLossPct: parsed.packetLossPct,
-          success: parsed.packetLossPct < 100
+          packetLossPct,
+          success: packetLossPct < 100
         };
       } catch {
         return {
