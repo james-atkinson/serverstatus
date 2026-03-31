@@ -1,11 +1,20 @@
 import os from "node:os";
 import si from "systeminformation";
 
+const pickPrimaryNic = (stats) => {
+  if (!Array.isArray(stats) || !stats.length) return null;
+  const nonLoopback = stats.filter((entry) => entry.iface && entry.iface !== "lo" && !entry.iface.startsWith("lo"));
+  return nonLoopback[0] || stats[0] || null;
+};
+
 export const getSystemHealth = async () => {
-  const [cpuLoad, mem, fsSize] = await Promise.all([
+  const [cpuLoad, mem, fsSize, disksIo, netStats, osInfo] = await Promise.all([
     si.currentLoad(),
     si.mem(),
-    si.fsSize()
+    si.fsSize(),
+    si.disksIO(),
+    si.networkStats(),
+    si.osInfo()
   ]);
 
   const minFilesystemSizeBytes = 1024 * 1024 * 1024;
@@ -20,18 +29,13 @@ export const getSystemHealth = async () => {
       usePct: Number((entry.use ?? ((entry.used / entry.size) * 100)).toFixed(2))
     }));
 
-  const diskTotals = fsSize.reduce(
-    (acc, entry) => {
-      acc.total += entry.size;
-      acc.used += entry.used;
-      return acc;
-    },
-    { total: 0, used: 0 }
-  );
+  const primaryNic = pickPrimaryNic(netStats);
 
   return {
     hostname: os.hostname(),
     uptimeSec: os.uptime(),
+    lastBootAt: new Date(Date.now() - os.uptime() * 1000).toISOString(),
+    kernelVersion: osInfo?.kernel || os.release(),
     loadAvg: os.loadavg(),
     cpuUsagePct: Number(cpuLoad.currentLoad.toFixed(2)),
     memory: {
@@ -39,10 +43,19 @@ export const getSystemHealth = async () => {
       used: mem.used,
       free: mem.free
     },
-    disk: {
-      total: diskTotals.total,
-      used: diskTotals.used,
-      free: Math.max(0, diskTotals.total - diskTotals.used)
+    diskIo: {
+      readBytesSec: Number(disksIo?.rIO_sec || 0),
+      writeBytesSec: Number(disksIo?.wIO_sec || 0),
+      tps: Number(disksIo?.tIO_sec || 0)
+    },
+    network: {
+      iface: primaryNic?.iface || null,
+      rxBytesSec: Number(primaryNic?.rx_sec || 0),
+      txBytesSec: Number(primaryNic?.tx_sec || 0),
+      rxDropped: Number(primaryNic?.rx_dropped || 0),
+      txDropped: Number(primaryNic?.tx_dropped || 0),
+      rxErrors: Number(primaryNic?.rx_errors || 0),
+      txErrors: Number(primaryNic?.tx_errors || 0)
     },
     filesystems
   };

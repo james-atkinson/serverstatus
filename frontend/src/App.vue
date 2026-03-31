@@ -12,9 +12,20 @@
       <div class="grid-row">
       <StatusCard title="System Health">
         <div v-if="system">
-          <p>Host: {{ system.hostname }}</p>
+          <p>
+            Host: {{ system.hostname }} |
+            Rebooted: {{ formatTimestamp(system.lastBootAt) }} |
+            Kernel: {{ system.kernelVersion || "n/a" }}
+          </p>
           <p>CPU: {{ system.cpuUsagePct }}%</p>
           <p>Load Avg: {{ formatLoadAvg(system.loadAvg) }}</p>
+          <p>
+            Disk I/O: R {{ formatRate(system.diskIo?.readBytesSec) }} / W {{ formatRate(system.diskIo?.writeBytesSec) }}
+            | TPS {{ Number(system.diskIo?.tps || 0).toFixed(1) }}
+          </p>
+          <p>
+            Net ({{ system.network?.iface || "n/a" }}): RX {{ formatRate(system.network?.rxBytesSec) }} / TX {{ formatRate(system.network?.txBytesSec) }}
+          </p>
           <div class="metric-block">
             <div class="metric-row">
               <span>Memory</span>
@@ -507,6 +518,14 @@ const formatMs = (value) => (typeof value === "number" ? value.toFixed(2) : "n/a
 const formatLoadAvg = (values) => {
   if (!Array.isArray(values) || !values.length) return "n/a";
   return values.map((value) => Number(value).toFixed(2)).join(" / ");
+};
+const formatRate = (bytesPerSec) => {
+  const bytes = Number(bytesPerSec || 0);
+  if (!Number.isFinite(bytes) || bytes < 0) return "n/a";
+  if (bytes < 1024) return `${bytes.toFixed(0)} B/s`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB/s`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB/s`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB/s`;
 };
 const pad2 = (value) => String(value ?? 0).padStart(2, "0");
 const resolveSonarrArt = (episode) => {
