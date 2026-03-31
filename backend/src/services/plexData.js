@@ -27,6 +27,21 @@ const safeGet = async (url, options = {}) => {
   }
 };
 
+const pickArt = (entry) => {
+  const candidates = [
+    entry?.grandparentThumb,
+    entry?.parentThumb,
+    entry?.thumb,
+    entry?.art
+  ].filter(Boolean);
+  const selected = candidates[0] || null;
+  if (!selected) return { artPath: null, artUrl: null };
+  if (selected.startsWith("http://") || selected.startsWith("https://")) {
+    return { artPath: null, artUrl: selected };
+  }
+  return { artPath: selected, artUrl: null };
+};
+
 const buildAppUrl = (entry, sonarr, radarr, sonarrByTitle, radarrList) => {
   const type = normalize(entry?.type);
   const title = entry?.title || "";
@@ -121,6 +136,7 @@ export const getPlexNowPlaying = async () => {
     const duration = Number(entry.duration || 0);
     const viewOffset = Number(entry.viewOffset || 0);
     const progressPct = duration > 0 ? Number(((viewOffset / duration) * 100).toFixed(2)) : 0;
+    const art = pickArt(entry);
 
     return {
       sessionId: session.id || null,
@@ -132,7 +148,8 @@ export const getPlexNowPlaying = async () => {
       state: player.state || "unknown",
       progressPct,
       startedAt: entry.lastViewedAt || null,
-      artPath: entry.thumb || entry.grandparentThumb || entry.art || null,
+      artPath: art.artPath,
+      artUrl: art.artUrl,
       appUrl: buildAppUrl(entry, sonarr, radarr, sonarrByTitle, radarrList)
     };
   });
@@ -164,6 +181,7 @@ export const getPlexHistory = async (limit = 20) => {
   return videos.map((entry) => {
     const title = entry.title || "Unknown Title";
     const seriesTitle = entry.grandparentTitle || null;
+    const art = pickArt(entry);
 
     return {
       historyId: entry.ratingKey || null,
@@ -174,7 +192,8 @@ export const getPlexHistory = async (limit = 20) => {
       playedAt: entry.viewedAt ? new Date(Number(entry.viewedAt) * 1000).toISOString() : null,
       durationMs: entry.duration ? Number(entry.duration) : null,
       viewOffsetMs: entry.viewOffset ? Number(entry.viewOffset) : null,
-      artPath: entry.thumb || entry.grandparentThumb || entry.art || null,
+      artPath: art.artPath,
+      artUrl: art.artUrl,
       appUrl: buildAppUrl(entry, sonarr, radarr, sonarrByTitle, radarrList)
     };
   });

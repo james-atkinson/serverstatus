@@ -461,6 +461,7 @@ const resolveRadarrArt = (movie) => {
   return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='360'%3E%3Crect width='240' height='360' fill='%23111116'/%3E%3Ctext x='50%25' y='50%25' fill='%23adadb8' font-size='14' text-anchor='middle' dominant-baseline='middle'%3ENo Poster%3C/text%3E%3C/svg%3E";
 };
 const resolvePlexArt = (item) => {
+  if (item?.artUrl) return item.artUrl;
   if (item?.artPath) return `/api/plex/art?path=${encodeURIComponent(item.artPath)}`;
   return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='360'%3E%3Crect width='240' height='360' fill='%23111116'/%3E%3Ctext x='50%25' y='50%25' fill='%23adadb8' font-size='14' text-anchor='middle' dominant-baseline='middle'%3ENo Art%3C/text%3E%3C/svg%3E";
 };
