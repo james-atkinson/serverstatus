@@ -1,6 +1,6 @@
 :root {
   --bg: #120f12;
-  --panel: #1a1519;
+  --panel: #111116;
   --text: #f1e9ed;
   --muted: #b6a8b0;
   --border: #3d2d36;
@@ -14,7 +14,7 @@
 
 :root[data-theme="light"] {
   --bg: #f4eff1;
-  --panel: #fffafb;
+  --panel: #ffffff;
   --text: #2a1f26;
   --muted: #6c5b64;
   --border: #d8c5ce;

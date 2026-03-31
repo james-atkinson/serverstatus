@@ -2,8 +2,7 @@
   <div class="app-shell">
     <header class="topbar">
       <div>
-        <h1>Media Server Status</h1>
-        <p>Ubuntu host + media stack health dashboard</p>
+        <h1>Server Status</h1>
       </div>
       <button class="theme-btn" @click="toggleTheme">Theme: {{ themeLabel }}</button>
     </header>
