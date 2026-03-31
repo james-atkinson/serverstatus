@@ -24,6 +24,34 @@ const getDirectorySizeBytes = async (targetPath) => {
   }
 };
 
+const getFilesystemUsageByName = async (filesystemName) => {
+  try {
+    const { stdout } = await execFileAsync("df", ["-B1", filesystemName]);
+    const lines = (stdout || "")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (lines.length < 2) return null;
+    const cols = lines[1].split(/\s+/);
+    if (cols.length < 6) return null;
+    const total = Number(cols[1] || 0);
+    const used = Number(cols[2] || 0);
+    const free = Number(cols[3] || 0);
+    const usePctRaw = String(cols[4] || "0").replace("%", "");
+    const usePct = Number.parseFloat(usePctRaw);
+    const mount = cols.slice(5).join(" ");
+    return {
+      total: Number.isFinite(total) ? total : 0,
+      used: Number.isFinite(used) ? used : 0,
+      free: Number.isFinite(free) ? free : 0,
+      usePct: Number.isFinite(usePct) ? Number(usePct.toFixed(2)) : 0,
+      mount: mount || ""
+    };
+  } catch {
+    return null;
+  }
+};
+
 const getFilesystemUsageFromPath = async (targetPath) => {
   try {
     const stat = await fs.statfs(targetPath);
@@ -59,15 +87,28 @@ export const getSystemHealth = async () => {
     usePct: Number((entry.use ?? ((entry.used / entry.size) * 100)).toFixed(2))
   }));
 
+  const configuredFsUsageEntries = await Promise.all(
+    Array.from(configuredFs).map(async (filesystemName) => [filesystemName, await getFilesystemUsageByName(filesystemName)])
+  );
+  const configuredFsUsage = new Map(configuredFsUsageEntries);
+
   const filesystemMonitors = allFilesystems
     .filter((entry) => !configuredFs.size || configuredFs.has(entry.fs))
-    .map((entry) => ({
-      id: `fs:${entry.fs}`,
-      label: entry.fs,
-      path: entry.mount || entry.fs,
-      ...entry,
-      paths: []
-    }));
+    .map((entry) => {
+      const usage = configuredFsUsage.get(entry.fs);
+      return {
+        id: `fs:${entry.fs}`,
+        label: entry.fs,
+        path: entry.mount || entry.fs,
+        ...entry,
+        total: usage?.total || entry.total,
+        used: usage?.used || entry.used,
+        free: usage?.free || entry.free,
+        usePct: Number((usage?.usePct ?? entry.usePct).toFixed(2)),
+        mount: usage?.mount || entry.mount || "",
+        paths: []
+      };
+    });
 
   const mountCandidates = allFilesystems.slice().sort((a, b) => (b.mount || "").length - (a.mount || "").length);
   const pathMonitors = await Promise.all(
@@ -107,16 +148,17 @@ export const getSystemHealth = async () => {
   for (const pathMonitor of pathMonitors) {
     if (!fsByName.has(pathMonitor.fs)) {
       const fallback = allFilesystems.find((entry) => entry.fs === pathMonitor.fs);
+      const usage = configuredFsUsage.get(pathMonitor.fs);
       const dynamicFs = {
         id: `fs:${pathMonitor.fs}`,
         label: pathMonitor.fs,
-        path: fallback?.mount || pathMonitor.mount || pathMonitor.fs,
+        path: usage?.mount || fallback?.mount || pathMonitor.mount || pathMonitor.fs,
         fs: pathMonitor.fs,
-        mount: fallback?.mount || pathMonitor.mount || "",
-        total: fallback?.total || pathMonitor.filesystemTotal || 0,
-        used: fallback?.used || pathMonitor.filesystemUsed || 0,
-        free: fallback?.free || pathMonitor.filesystemFree || 0,
-        usePct: fallback?.usePct || pathMonitor.filesystemUsePct || 0,
+        mount: usage?.mount || fallback?.mount || pathMonitor.mount || "",
+        total: usage?.total || fallback?.total || pathMonitor.filesystemTotal || 0,
+        used: usage?.used || fallback?.used || pathMonitor.filesystemUsed || 0,
+        free: usage?.free || fallback?.free || pathMonitor.filesystemFree || 0,
+        usePct: usage?.usePct || fallback?.usePct || pathMonitor.filesystemUsePct || 0,
         paths: []
       };
       fsByName.set(pathMonitor.fs, dynamicFs);
