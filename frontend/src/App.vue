@@ -47,6 +47,12 @@
 
       <StatusCard title="Services">
         <ul class="service-list">
+          <li>
+            <span>Plex</span>
+            <span :class="'state-' + (plexAuth.connected ? 'up' : 'down')">
+              {{ plexAuth.connected ? "up" : "down" }}
+            </span>
+          </li>
           <li v-for="svc in visibleServices" :key="svc.serviceName ?? svc.name">
             <a
               class="service-link"
