@@ -12,7 +12,7 @@
       <div class="grid-row">
       <StatusCard title="System Health">
         <div v-if="system">
-          <div class="system-grid">
+          <div class="system-grid system-grid-primary">
             <div class="system-grid-item">
               <span class="system-grid-label">Host</span>
               <strong>{{ system.hostname }}</strong>
@@ -25,12 +25,12 @@
               <span class="system-grid-label">Kernel</span>
               <strong>{{ system.kernelVersion || "n/a" }}</strong>
             </div>
-          </div>
-          <div class="system-grid system-grid-compact">
             <div class="system-grid-item">
               <span class="system-grid-label">CPU</span>
               <strong>{{ system.cpuUsagePct }}%</strong>
             </div>
+          </div>
+          <div class="system-grid system-grid-compact">
             <div class="system-grid-item">
               <span class="system-grid-label">Load</span>
               <strong>{{ formatLoadAvg(system.loadAvg) }}</strong>

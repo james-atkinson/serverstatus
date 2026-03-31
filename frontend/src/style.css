@@ -160,6 +160,10 @@ body {
   margin-bottom: 10px;
 }
 
+.system-grid-primary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .system-grid-item {
   border: 1px solid var(--border);
   padding: 8px;
@@ -180,7 +184,7 @@ body {
 }
 
 .system-grid-compact {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .system-grid-compact .system-grid-item {
