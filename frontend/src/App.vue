@@ -105,7 +105,14 @@
       <StatusCard title="Services">
         <ul class="service-list">
           <li>
-            <span>Plex</span>
+            <a
+              class="service-link"
+              :href="plexServiceUrl || '#'"
+              :target="plexServiceUrl ? '_blank' : null"
+              rel="noreferrer noopener"
+            >
+              Plex
+            </a>
             <span :class="'state-' + (plexAuth.connected ? 'up' : 'down')">
               {{ plexAuth.connected ? "up" : "down" }}
             </span>
@@ -420,6 +427,13 @@ let plexPollTimer = null;
 const theme = ref(localStorage.getItem("theme") || "dark");
 
 const themeLabel = computed(() => (theme.value === "dark" ? "Dark" : "Light"));
+const plexServiceUrl = computed(() => {
+  if (plexAuth.value?.serverUrl) return plexAuth.value.serverUrl;
+  const plexService = (services.value || []).find(
+    (svc) => (svc.serviceName ?? svc.name)?.toLowerCase() === "plex"
+  );
+  return plexService?.appUrl || plexService?.url || null;
+});
 const visibleServices = computed(() =>
   (services.value || []).filter((svc) => (svc.serviceName ?? svc.name)?.toLowerCase() !== "plex")
 );
