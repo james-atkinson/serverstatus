@@ -42,7 +42,7 @@
             </div>
             <div class="system-grid-item">
               <span class="system-grid-label">Network</span>
-              <strong>{{ system.network?.iface || "n/a" }} RX {{ formatRate(system.network?.rxBytesSec) }} / TX {{ formatRate(system.network?.txBytesSec) }}</strong>
+              <strong>RX {{ formatRate(system.network?.rxBytesSec) }} / TX {{ formatRate(system.network?.txBytesSec) }}</strong>
             </div>
           </div>
           <div class="metric-block">
